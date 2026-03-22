@@ -198,6 +198,12 @@ variable "cur_athena_output_location" {
   default     = ""
 }
 
+variable "athena_results_bucket_name" {
+  description = "S3 bucket name for Athena query results. Used to scope IAM write permissions (ISO 27001 A.5.15). If empty, falls back to '*-athena-results' wildcard pattern."
+  type        = string
+  default     = ""
+}
+
 # -----------------------------------------------------------------------------
 # VPC Configuration
 # -----------------------------------------------------------------------------

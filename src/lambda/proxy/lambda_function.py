@@ -37,7 +37,9 @@ def invoke_mcp_runtime(mcp_request: dict) -> dict:
     payload = json.dumps(mcp_request).encode("utf-8")
 
     print(f"Invoking runtime: {RUNTIME_ARN}")
-    print(f"Payload: {mcp_request}")
+    # ISO 27001 A.8.15/A.8.12: Truncate payload log to avoid leaking sensitive CLI commands.
+    payload_preview = json.dumps(mcp_request)[:200]
+    print(f"Payload (truncated): {payload_preview}")
 
     try:
         response = client.invoke_agent_runtime(
@@ -109,7 +111,8 @@ def detect_tool_from_args(args: dict) -> str:
 
 def lambda_handler(event, context):
     """Lambda handler for MCP proxy requests."""
-    print(f"Received event: {json.dumps(event)}")
+    # ISO 27001 A.8.15/A.8.12: Log event keys only to avoid leaking sensitive payload data.
+    print(f"Received event keys: {list(event.keys()) if isinstance(event, dict) else type(event).__name__}")
 
     # Extract request body
     if "body" in event:

@@ -53,6 +53,10 @@ module "agentcore_runtime" {
   container_uri  = local.container_uri
   aws_policy_arn = var.runtime_aws_policy_arn
 
+  # ISO 27001 A.5.15: Scope runtime S3 write permissions to named buckets
+  cur_bucket_name            = var.cur_bucket_name
+  athena_results_bucket_name = var.athena_results_bucket_name
+
   tags = local.common_tags
 }
 

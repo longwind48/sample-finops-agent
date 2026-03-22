@@ -19,6 +19,18 @@ variable "aws_policy_arn" {
   default     = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
+variable "cur_bucket_name" {
+  description = "S3 bucket name for CUR data (used to scope Athena results write permissions). Defaults to wildcard pattern if empty."
+  type        = string
+  default     = ""
+}
+
+variable "athena_results_bucket_name" {
+  description = "S3 bucket name for Athena query results (used to scope write permissions). Defaults to wildcard pattern if empty."
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

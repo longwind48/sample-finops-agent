@@ -8,23 +8,36 @@ Cost Explorer and CUR data in the management/payer account.
 """
 
 import os
-from functools import lru_cache
+import time
 
 import boto3
 
+# ISO 27001 A.8.28: TTL-based credential caching to prevent use of expired STS credentials.
+# Lambda execution environments can live longer than the 1-hour STS credential TTL, so
+# lru_cache (which never expires) would silently serve expired credentials. We refresh
+# proactively 5 minutes before expiry.
+_cached_session = None
+_session_expiry: float = 0.0
+_REFRESH_BUFFER_SECONDS = 300  # refresh 5 min before expiry
 
-@lru_cache(maxsize=1)
+
 def get_cross_account_session():
-    """Get boto3 session with assumed role credentials (cached for Lambda reuse).
+    """Get boto3 session with assumed role credentials (TTL-cached for Lambda reuse).
 
     Returns:
         boto3.Session with assumed role credentials, or None if not configured.
     """
+    global _cached_session, _session_expiry
+
     role_arn = os.environ.get("CROSS_ACCOUNT_ROLE_ARN", "")
     external_id = os.environ.get("CROSS_ACCOUNT_EXTERNAL_ID", "")
 
     if not role_arn:
         return None
+
+    # Return cached session if still valid (with refresh buffer)
+    if _cached_session is not None and time.time() < _session_expiry - _REFRESH_BUFFER_SECONDS:
+        return _cached_session
 
     sts = boto3.client("sts")
     params = {
@@ -35,12 +48,15 @@ def get_cross_account_session():
     if external_id:
         params["ExternalId"] = external_id
 
-    creds = sts.assume_role(**params)["Credentials"]
-    return boto3.Session(
+    response = sts.assume_role(**params)
+    creds = response["Credentials"]
+    _session_expiry = creds["Expiration"].timestamp()
+    _cached_session = boto3.Session(
         aws_access_key_id=creds["AccessKeyId"],
         aws_secret_access_key=creds["SecretAccessKey"],
         aws_session_token=creds["SessionToken"],
     )
+    return _cached_session
 
 
 def get_aws_client(service_name, region_name=None, **kwargs):

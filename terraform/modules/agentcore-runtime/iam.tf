@@ -137,6 +137,26 @@ resource "aws_iam_role_policy_attachment" "aws_api_access" {
   policy_arn = var.aws_policy_arn
 }
 
+# ISO 27001 A.5.15: Scope S3 write permissions to specific bucket ARNs when bucket names
+# are provided. Falls back to wildcard patterns only when names are not configured.
+locals {
+  athena_results_resources = var.athena_results_bucket_name != "" ? [
+    "arn:aws:s3:::${var.athena_results_bucket_name}",
+    "arn:aws:s3:::${var.athena_results_bucket_name}/*",
+  ] : [
+    "arn:aws:s3:::*-athena-results",
+    "arn:aws:s3:::*-athena-results/*",
+  ]
+
+  cur_s3_resources = var.cur_bucket_name != "" ? [
+    "arn:aws:s3:::${var.cur_bucket_name}",
+    "arn:aws:s3:::${var.cur_bucket_name}/*",
+  ] : [
+    "arn:aws:s3:::*-cur-*",
+    "arn:aws:s3:::*-cur-*/*",
+  ]
+}
+
 # Athena query execution permissions (not included in ReadOnlyAccess)
 data "aws_iam_policy_document" "athena_query" {
   # Athena query execution
@@ -152,7 +172,7 @@ data "aws_iam_policy_document" "athena_query" {
     ]
   }
 
-  # S3 write access for Athena query results
+  # S3 write access for Athena query results - scoped to named buckets when configured
   statement {
     sid    = "AthenaResultsWrite"
     effect = "Allow"
@@ -160,12 +180,7 @@ data "aws_iam_policy_document" "athena_query" {
       "s3:PutObject",
       "s3:GetBucketLocation"
     ]
-    resources = [
-      "arn:aws:s3:::*-athena-results",
-      "arn:aws:s3:::*-athena-results/*",
-      "arn:aws:s3:::*-cur-*",
-      "arn:aws:s3:::*-cur-*/*"
-    ]
+    resources = concat(local.athena_results_resources, local.cur_s3_resources)
   }
 }
 
