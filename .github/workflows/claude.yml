@@ -25,6 +25,7 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
       (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'claude')
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       AWS_REGION: us-east-1
     steps:
@@ -50,4 +51,4 @@ jobs:
           github_token: ${{ steps.app-token.outputs.token }}
           use_bedrock: "true"
           label_trigger: "claude"
-          claude_args: '--model us.anthropic.claude-sonnet-4-6 --max-turns 30'
+          claude_args: '--model us.anthropic.claude-sonnet-4-6 --max-turns 200'
