@@ -240,3 +240,9 @@ variable "lambda_kms_key_arn" {
   type        = string
   default     = null
 }
+
+variable "log_group_kms_key_arn" {
+  description = "ARN of KMS key to encrypt CloudWatch Log Groups (Lambda + VPC flow logs). If null, AWS managed encryption is used. Recommended for production deployments to meet A.8.24 (Use of cryptography)."
+  type        = string
+  default     = null
+}

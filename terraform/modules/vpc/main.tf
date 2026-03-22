@@ -46,6 +46,10 @@ resource "aws_cloudwatch_log_group" "flow_log" {
   retention_in_days = var.flow_log_retention_in_days
   kms_key_id        = var.log_group_kms_key_arn
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = var.tags
 }
 

@@ -37,7 +37,8 @@ def invoke_mcp_runtime(mcp_request: dict) -> dict:
     payload = json.dumps(mcp_request).encode("utf-8")
 
     print(f"Invoking runtime: {RUNTIME_ARN}")
-    print(f"Payload: {mcp_request}")
+    # Log method and id only; omit params to avoid logging sensitive tool arguments (A.8.12)
+    print(f"MCP method: {mcp_request.get('method')}, id: {mcp_request.get('id')}")
 
     try:
         response = client.invoke_agent_runtime(
@@ -109,7 +110,8 @@ def detect_tool_from_args(args: dict) -> str:
 
 def lambda_handler(event, context):
     """Lambda handler for MCP proxy requests."""
-    print(f"Received event: {json.dumps(event)}")
+    # Log event keys only (not values) to avoid logging sensitive data (A.8.12)
+    print(f"Received event keys: {list(event.keys()) if isinstance(event, dict) else type(event).__name__}")
 
     # Extract request body
     if "body" in event:
