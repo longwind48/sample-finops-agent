@@ -51,9 +51,13 @@ Required IAM Permissions:
 """
 
 import json
+import logging
 import re
 
 import boto3
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Block DDL/DML operations - defense in depth (IAM also restricts write actions)
 BLOCKED_SQL_PATTERNS = re.compile(
@@ -165,6 +169,7 @@ def handle_start_query_execution(event):
             "message": f"Query started. Use get_query_execution with query_execution_id '{query_execution_id}' to check status.",
         }
     except Exception as e:
+        logger.error("Error in handle_start_query_execution", exc_info=True)
         return {"error": str(e)}
 
 
@@ -220,6 +225,7 @@ def handle_get_query_execution(event):
 
         return result
     except Exception as e:
+        logger.error("Error in handle_get_query_execution", exc_info=True)
         return {"error": str(e), "query_execution_id": query_execution_id}
 
 
@@ -295,6 +301,7 @@ def handle_get_query_results(event):
             "next_token": response.get("NextToken"),
         }
     except Exception as e:
+        logger.error("Error in handle_get_query_results", exc_info=True)
         return {"error": str(e), "query_execution_id": query_execution_id}
 
 
@@ -353,6 +360,7 @@ def handle_list_query_executions(event):
             "next_token": response.get("NextToken"),
         }
     except Exception as e:
+        logger.error("Error in handle_list_query_executions", exc_info=True)
         return {"error": str(e)}
 
 
@@ -391,6 +399,7 @@ def handle_list_databases(event):
             "next_token": response.get("NextToken"),
         }
     except Exception as e:
+        logger.error("Error in handle_list_databases", exc_info=True)
         return {"error": str(e), "catalog": catalog}
 
 
@@ -443,6 +452,7 @@ def handle_list_tables(event):
             "next_token": response.get("NextToken"),
         }
     except Exception as e:
+        logger.error("Error in handle_list_tables", exc_info=True)
         return {"error": str(e), "database": database}
 
 
@@ -489,6 +499,7 @@ def handle_get_table_metadata(event):
             "create_time": str(table_meta.get("CreateTime", "")),
         }
     except Exception as e:
+        logger.error("Error in handle_get_table_metadata", exc_info=True)
         return {"error": str(e), "database": database, "table": table}
 
 
@@ -515,4 +526,5 @@ def handle_stop_query_execution(event):
             "message": "Query execution stop request submitted successfully",
         }
     except Exception as e:
+        logger.error("Error in handle_stop_query_execution", exc_info=True)
         return {"error": str(e), "query_execution_id": query_execution_id}

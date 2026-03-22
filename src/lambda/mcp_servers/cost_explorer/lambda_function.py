@@ -43,10 +43,14 @@ Required IAM Permissions:
 """
 
 import json
+import logging
 import re
 from datetime import datetime, timedelta
 
 import boto3
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Valid Cost Explorer dimensions per AWS API
 VALID_DIMENSIONS = {
@@ -159,6 +163,7 @@ def handle_get_dimension_values(event):
             "count": len(values),
         }
     except Exception as e:
+        logger.error("Error in handle_get_dimension_values", exc_info=True)
         return {"error": str(e), "dimension": dimension}
 
 
@@ -190,6 +195,7 @@ def handle_get_tag_values(event):
             "count": len(values),
         }
     except Exception as e:
+        logger.error("Error in handle_get_tag_values", exc_info=True)
         return {"error": str(e), "tag_key": tag_key}
 
 
@@ -251,6 +257,7 @@ def handle_get_cost_and_usage(event):
             "results": results,
         }
     except Exception as e:
+        logger.error("Error in handle_get_cost_and_usage", exc_info=True)
         return {"error": str(e)}
 
 
@@ -337,6 +344,7 @@ def handle_get_cost_and_usage_comparisons(event):
             "total_previous": round(sum(previous_costs.values()), 2),
         }
     except Exception as e:
+        logger.error("Error in handle_get_cost_and_usage_comparisons", exc_info=True)
         return {"error": str(e)}
 
 
@@ -381,4 +389,5 @@ def handle_get_cost_forecast(event):
             ],
         }
     except Exception as e:
+        logger.error("Error in handle_get_cost_forecast", exc_info=True)
         return {"error": str(e)}
