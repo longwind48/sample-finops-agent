@@ -39,7 +39,6 @@ import time
 import boto3
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 # Cross-account support - shared module is packaged alongside lambda_function.py
 try:
@@ -473,6 +472,7 @@ def collect_savings_and_forecast() -> dict:
     except Exception as e:
         error_msg = str(e)
         if "DataUnavailable" in error_msg or "BillEstimate" in error_msg:
+            logger.info("Forecast data unavailable (expected): %s", error_msg)
             results["forecast"] = {"note": "insufficient history for forecast (requires 14+ days)"}
         else:
             logger.error("Error in collect_savings_and_forecast: forecast", exc_info=True)
@@ -563,7 +563,6 @@ def handle_analyze_cur(event):
     except Exception as e:
         logger.error("Error in handle_analyze_cur: cost_explorer", exc_info=True)
         results["errors"].append(f"cost_explorer: {e!s}")
-        print(f"Cost Explorer error: {e}")
 
     try:
         print("Phase 1b: Collecting Savings and Forecast data...")
@@ -572,7 +571,6 @@ def handle_analyze_cur(event):
     except Exception as e:
         logger.error("Error in handle_analyze_cur: savings_forecast", exc_info=True)
         results["errors"].append(f"savings_forecast: {e!s}")
-        print(f"Savings/Forecast error: {e}")
 
     # Phase 2: CUR Athena Queries
     try:
@@ -590,7 +588,6 @@ def handle_analyze_cur(event):
     except Exception as e:
         logger.error("Error in handle_analyze_cur: cur_athena", exc_info=True)
         results["errors"].append(f"cur_athena: {e!s}")
-        print(f"CUR Athena error: {e}")
 
     # Remove errors key if empty
     if not results["errors"]:

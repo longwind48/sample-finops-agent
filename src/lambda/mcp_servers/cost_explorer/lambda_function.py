@@ -50,7 +50,6 @@ from datetime import datetime, timedelta
 import boto3
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 # Valid Cost Explorer dimensions per AWS API
 VALID_DIMENSIONS = {

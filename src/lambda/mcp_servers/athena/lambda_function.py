@@ -57,7 +57,6 @@ import re
 import boto3
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 # Block DDL/DML operations - defense in depth (IAM also restricts write actions)
 BLOCKED_SQL_PATTERNS = re.compile(
