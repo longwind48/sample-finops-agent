@@ -1,11 +1,5 @@
 name: Claude Code
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
-  id-token: write
-
 on:
   issue_comment:
     types: [created]
@@ -18,40 +12,8 @@ on:
 
 jobs:
   claude:
-    if: |
-      github.event.sender.type != 'Bot' &&
-      (
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-        (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
-        (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'claude')
-      )
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      AWS_REGION: us-east-1
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
-
-      - name: Run Claude Code
-        uses: anthropics/claude-code-action@v1
-        with:
-          github_token: ${{ steps.app-token.outputs.token }}
-          use_bedrock: "true"
-          label_trigger: "claude"
-          claude_args: '--model us.anthropic.claude-sonnet-4-6 --max-turns 200'
+    uses: longwind48/claude-skills/.github/workflows/claude-reusable.yml@main
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
