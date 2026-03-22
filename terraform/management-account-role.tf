@@ -144,6 +144,10 @@ resource "aws_iam_role" "mcp_gateway_cross_account" {
   description        = "Allows MCP Gateway in data collection account to access Cost Explorer and CUR data"
   assume_role_policy = data.aws_iam_policy_document.cross_account_trust[0].json
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = merge(local.common_tags, {
     Purpose = "mcp-gateway-cross-account"
   })

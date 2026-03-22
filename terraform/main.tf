@@ -39,6 +39,8 @@ module "vpc" {
   aws_region   = var.aws_region
   vpc_cidr     = var.vpc_cidr
 
+  log_group_kms_key_arn = var.log_group_kms_key_arn
+
   tags = local.common_tags
 }
 
@@ -74,6 +76,7 @@ module "lambda_proxy" {
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
   log_retention_in_days          = var.log_retention_in_days
   lambda_kms_key_arn             = var.lambda_kms_key_arn
+  log_group_kms_key_arn          = var.log_group_kms_key_arn
 
   tags = local.common_tags
 
@@ -106,6 +109,7 @@ module "mcp_test" {
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
   log_retention_in_days          = var.log_retention_in_days
   lambda_kms_key_arn             = var.lambda_kms_key_arn
+  log_group_kms_key_arn          = var.log_group_kms_key_arn
 
   tags = local.common_tags
 }
@@ -146,6 +150,7 @@ module "mcp_cost_explorer" {
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
   log_retention_in_days          = var.log_retention_in_days
   lambda_kms_key_arn             = var.lambda_kms_key_arn
+  log_group_kms_key_arn          = var.log_group_kms_key_arn
 
   tags = local.common_tags
 }
@@ -221,6 +226,7 @@ module "mcp_athena" {
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
   log_retention_in_days          = var.log_retention_in_days
   lambda_kms_key_arn             = var.lambda_kms_key_arn
+  log_group_kms_key_arn          = var.log_group_kms_key_arn
 
   tags = local.common_tags
 }
@@ -309,6 +315,7 @@ module "mcp_cur_analyst" {
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
   log_retention_in_days          = var.log_retention_in_days
   lambda_kms_key_arn             = var.lambda_kms_key_arn
+  log_group_kms_key_arn          = var.log_group_kms_key_arn
 
   tags = local.common_tags
 }

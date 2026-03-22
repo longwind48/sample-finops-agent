@@ -89,6 +89,11 @@ enable_vpc = true
 # If not set, AWS managed encryption is used
 # lambda_kms_key_arn = "arn:aws:kms:us-east-1:123456789012:key/your-key-id"
 
+# KMS key ARN for CloudWatch Log Group encryption (optional, recommended for production)
+# Applies to all Lambda log groups and VPC flow logs. Meets A.8.24 (Use of cryptography).
+# If not set, AWS managed encryption is used
+# log_group_kms_key_arn = "arn:aws:kms:us-east-1:123456789012:key/your-key-id"
+
 # -----------------------------------------------------------------------------
 # Optional Configuration
 # -----------------------------------------------------------------------------
