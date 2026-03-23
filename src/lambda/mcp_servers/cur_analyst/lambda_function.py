@@ -31,11 +31,14 @@ Required IAM Permissions:
 """
 
 import json
+import logging
 import os
 import re
 import time
 
 import boto3
+
+logger = logging.getLogger(__name__)
 
 # Cross-account support - shared module is packaged alongside lambda_function.py
 try:
@@ -339,6 +342,7 @@ def collect_cost_explorer_data() -> dict:
             GroupBy=[{"Type": "DIMENSION", "Key": "LINKED_ACCOUNT"}],
         ).get("ResultsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_cost_explorer_data: monthly_trend_by_account", exc_info=True)
         results["monthly_trend_by_account"] = {"error": str(e)}
 
     try:
@@ -350,6 +354,7 @@ def collect_cost_explorer_data() -> dict:
             GroupBy=[{"Type": "DIMENSION", "Key": "SERVICE"}],
         ).get("ResultsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_cost_explorer_data: monthly_trend_by_service", exc_info=True)
         results["monthly_trend_by_service"] = {"error": str(e)}
 
     # === CURRENT MONTH BREAKDOWN ===
@@ -362,6 +367,7 @@ def collect_cost_explorer_data() -> dict:
             GroupBy=[{"Type": "DIMENSION", "Key": "LINKED_ACCOUNT"}],
         ).get("ResultsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_cost_explorer_data: current_month_by_account", exc_info=True)
         results["current_month_by_account"] = {"error": str(e)}
 
     try:
@@ -373,6 +379,7 @@ def collect_cost_explorer_data() -> dict:
             GroupBy=[{"Type": "DIMENSION", "Key": "SERVICE"}, {"Type": "DIMENSION", "Key": "LINKED_ACCOUNT"}],
         ).get("ResultsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_cost_explorer_data: current_month_by_service", exc_info=True)
         results["current_month_by_service"] = {"error": str(e)}
 
     try:
@@ -384,6 +391,7 @@ def collect_cost_explorer_data() -> dict:
             GroupBy=[{"Type": "DIMENSION", "Key": "REGION"}],
         ).get("ResultsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_cost_explorer_data: current_month_by_region", exc_info=True)
         results["current_month_by_region"] = {"error": str(e)}
 
     return {
@@ -426,6 +434,7 @@ def collect_savings_and_forecast() -> dict:
             TimePeriod={"Start": six_months_ago, "End": end_date}, Granularity="MONTHLY"
         ).get("SavingsPlansCoverages", [])
     except Exception as e:
+        logger.error("Error in collect_savings_and_forecast: sp_coverage", exc_info=True)
         results["sp_coverage"] = {"error": str(e)}
 
     # 2. Savings Plans Utilization (6 months, monthly)
@@ -434,6 +443,7 @@ def collect_savings_and_forecast() -> dict:
             TimePeriod={"Start": six_months_ago, "End": end_date}, Granularity="MONTHLY"
         ).get("SavingsPlansUtilizationsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_savings_and_forecast: sp_utilization", exc_info=True)
         results["sp_utilization"] = {"error": str(e)}
 
     # 3. Reserved Instance Coverage (6 months, monthly)
@@ -442,6 +452,7 @@ def collect_savings_and_forecast() -> dict:
             TimePeriod={"Start": six_months_ago, "End": end_date}, Granularity="MONTHLY"
         ).get("CoveragesByTime", [])
     except Exception as e:
+        logger.error("Error in collect_savings_and_forecast: ri_coverage", exc_info=True)
         results["ri_coverage"] = {"error": str(e)}
 
     # 4. Reserved Instance Utilization (6 months, monthly)
@@ -450,6 +461,7 @@ def collect_savings_and_forecast() -> dict:
             TimePeriod={"Start": six_months_ago, "End": end_date}, Granularity="MONTHLY"
         ).get("UtilizationsByTime", [])
     except Exception as e:
+        logger.error("Error in collect_savings_and_forecast: ri_utilization", exc_info=True)
         results["ri_utilization"] = {"error": str(e)}
 
     # 5. Cost Forecast (requires 14+ days history)
@@ -460,8 +472,10 @@ def collect_savings_and_forecast() -> dict:
     except Exception as e:
         error_msg = str(e)
         if "DataUnavailable" in error_msg or "BillEstimate" in error_msg:
+            logger.info("Forecast data unavailable (expected): %s", error_msg)
             results["forecast"] = {"note": "insufficient history for forecast (requires 14+ days)"}
         else:
+            logger.error("Error in collect_savings_and_forecast: forecast", exc_info=True)
             results["forecast"] = {"error": error_msg}
 
     return {
@@ -547,16 +561,16 @@ def handle_analyze_cur(event):
         results["cost_explorer"] = ce_result.get("cost_explorer_data", {})
         results["cost_explorer_date_range"] = ce_result.get("date_range", {})
     except Exception as e:
+        logger.error("Error in handle_analyze_cur: cost_explorer", exc_info=True)
         results["errors"].append(f"cost_explorer: {e!s}")
-        print(f"Cost Explorer error: {e}")
 
     try:
         print("Phase 1b: Collecting Savings and Forecast data...")
         savings_result = collect_savings_and_forecast()
         results["savings_forecast"] = savings_result.get("savings_data", {})
     except Exception as e:
+        logger.error("Error in handle_analyze_cur: savings_forecast", exc_info=True)
         results["errors"].append(f"savings_forecast: {e!s}")
-        print(f"Savings/Forecast error: {e}")
 
     # Phase 2: CUR Athena Queries
     try:
@@ -572,8 +586,8 @@ def handle_analyze_cur(event):
         cur_results = retrieve_all_results(historical_ids, detailed_ids)
         results["cur_data"] = cur_results.get("results", {})
     except Exception as e:
+        logger.error("Error in handle_analyze_cur: cur_athena", exc_info=True)
         results["errors"].append(f"cur_athena: {e!s}")
-        print(f"CUR Athena error: {e}")
 
     # Remove errors key if empty
     if not results["errors"]:
